@@ -1,0 +1,542 @@
+---
+title: "FONID - Nivel Primario (2019-2023)"
+format:
+  dashboard:
+    scrolling: true
+    theme: Lumen
+server: shiny
+---
+
+```{css}
+  tags$style(HTML("
+    table.data {
+      font-size: 11 px;  /* Adjust the size as needed */
+    }
+  ")),
+  
+.center-table {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Optional: Center vertically */
+}
+```
+
+
+```{r}
+#| context: setup
+#| echo: false
+#| warning: false
+#| message: false
+#| results: 'hide'
+
+#install.packages(TraMineR)
+
+library(tidyverse)
+library(readxl)
+library(TraMineR)
+library(shiny)
+library(ggplot2)
+library(dplyr)
+library(shinydashboard)
+#setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/Archivos_producidos')
+
+df<-read_delim('respaldo_indicadores_2019_2023_con_revista.csv', delim =";")
+indicadores <- read_excel('indicadores_2019_2023_con_revista.xlsx')
+escuelas_primarias <- read_csv('padron_escuelas_primarias.csv') 
+escuelas_primarias$cueanexo <- as.integer(escuelas_primarias$cueanexo)
+
+df <- df %>% sample_frac(0.1)
+df<-df[-1, ]
+prueba<-df[,6:65]
+df[,6:65][is.na(df[,6:65])] <- 0
+df[,6:65][df[,6:65] > 1] <- 1
+df<-df[-1, ]
+colnames(df)
+periodo_analisis <- seq(as.Date("2019-01-01"), as.Date("2023-12-01"), by = "month")
+periodo_analisis <- format(periodo_analisis, "%b %Y")
+colnames(df)[6: 65] <- periodo_analisis
+
+df <- merge(df, escuelas_primarias, by.x = "cueanexo", by.y = "cueanexo", all.x = TRUE)
+
+docentes_total <- format(sum(indicadores$cantidad_docentes,na.rm = TRUE),scientific = FALSE)
+
+docentes_total_titular <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(cantidad_docentes),na.rm=TRUE),scientific = FALSE)
+docentes_total_suplente <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(cantidad_docentes),na.rm=TRUE),scientific = FALSE)
+docentes_total_interino <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(cantidad_docentes),na.rm=TRUE),scientific = FALSE)
+
+docentes_estables_titular <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(estables),na.rm=TRUE),scientific = FALSE)
+docentes_no_estables_titular <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(no_estables),na.rm=TRUE),scientific = FALSE)
+docentes_suplentes_titular <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(suplentes_teoricos),na.rm=TRUE),scientific = FALSE)
+
+
+docentes_estables_suplente <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(estables),na.rm=TRUE),scientific = FALSE)
+docentes_no_estables_suplente <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(no_estables),na.rm=TRUE),scientific = FALSE)
+docentes_suplentes_suplente <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(suplentes_teoricos),na.rm=TRUE),scientific = FALSE)
+
+docentes_estables_interino <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(estables),na.rm=TRUE),scientific = FALSE)
+docentes_no_estables_interino <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(no_estables),na.rm=TRUE),scientific = FALSE)
+docentes_suplentes_interino <- format(sum(indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(suplentes_teoricos),na.rm=TRUE),scientific = FALSE)
+
+
+
+#porc_docentes_estables <- round(as.integer(docentes_estables)/as.integer(docentes_total),3) *100
+#porc_docentes_no_estables <- round(as.integer(docentes_no_estables)/as.integer(docentes_total),3) *100
+#porc_docentes_suplentes <- round(as.integer(docentes_suplentes)/as.integer(docentes_total),3) *100
+#porc_total <- porc_docentes_estables + porc_docentes_no_estables + porc_docentes_suplentes
+
+#docentes_total_mes <- format(sum(indicadores$meses_trabajados_suma,na.rm = TRUE),scientific = FALSE)
+#docentes_estables_mes <- format(sum(indicadores$estables_meses,na.rm = TRUE),scientific = FALSE)
+#docentes_no_estables_mes <- format(sum(indicadores$no_estables_meses,na.rm = TRUE),scientific = FALSE)
+#docentes_suplentes_mes <- format(sum(indicadores$suplentes_teoricos_meses,na.rm = TRUE),scientific = FALSE)
+
+#porc_docentes_estables_mes <- round(as.integer(docentes_estables_mes)/as.integer(docentes_total_mes),3) *100
+#porc_docentes_no_estables_mes <- round(as.integer(docentes_no_estables_mes)/as.integer(docentes_total_mes),3) *100
+#porc_docentes_suplentes_mes <- round(as.integer(docentes_suplentes_mes)/as.integer(docentes_total_mes),3) *100
+#porc_total_mes <- porc_docentes_estables_mes + porc_docentes_no_estables_mes + porc_docentes_suplentes_mes
+
+
+antiguedad <- round(mean(indicadores$antiguedad_promedio_total),2)
+
+
+#sample_df <- df[sample(1:nrow(df), nrow(df)*0.05), ]
+
+#sample_df.alphabet <- c(1,0)
+#sample_df.scodes <- c("SI", "NO")
+#sample_df.labels <- c("mes_trabajado","no_trabajado")
+
+#sample_df.seq <- seqdef(sample_df, 6:65, alphabet = sample_df.alphabet, states = sample_df.scodes, 
+#                   labels = sample_df.labels, xtstep = 2)
+
+#Tipo <- c('Estables', 'No_Estables', 'Suplentes','Total')
+#Cantidad <- c(docentes_estables, docentes_no_estables,docentes_suplentes,docentes_total)
+#Porc <- c(porc_docentes_estables,porc_docentes_no_estables,porc_docentes_suplentes,porc_total)
+#Meses <-c(docentes_estables_mes, docentes_no_estables_mes,docentes_suplentes_mes,docentes_total_mes)
+#Porc_mes <-c(porc_docentes_estables_mes,porc_docentes_no_estables_mes,porc_docentes_suplentes_mes,porc_total_mes)
+
+#resumen <- data.frame(Tipo, Cantidad,Porc,Meses,Porc_mes)
+
+```
+
+```{r}
+#| context: setup
+#| echo: false
+#| warning: false
+#| message: false
+#| results: 'hide'
+
+
+df_0<-read_delim('respaldo_indicadores_2019_2023.csv', delim =";")
+indicadores_0 <- read_excel('indicadores_2019_2023.xlsx')
+df_0 <- df_0 %>% sample_frac(0.1)
+df_0<-df_0[-1, ]
+df_0[,5:64][is.na(df_0[,5:64])] <- 0
+df_0[,5:64][df_0[,5:64] > 1] <- 1
+df_0<-df_0[-1, ]
+colnames(df_0)[5: 64] <- periodo_analisis
+df_0 <- merge(df_0, escuelas_primarias, by.x = "cueanexo", by.y = "cueanexo", all.x = TRUE)
+
+
+
+
+docentes_total_0 <- format(sum(indicadores_0$cantidad_docentes,na.rm = TRUE),scientific = FALSE)
+docentes_estables_0 <- format(sum(indicadores_0$estables,na.rm = TRUE),scientific = FALSE)
+docentes_no_estables_0 <- format(sum(indicadores_0$no_estables,na.rm = TRUE),scientific = FALSE)
+docentes_suplentes_0 <- format(sum(indicadores_0$suplentes_teoricos,na.rm = TRUE),scientific = FALSE)
+
+porc_docentes_estables_0 <- round(as.integer(docentes_estables_0)/as.integer(docentes_total_0),3) *100
+porc_docentes_no_estables_0 <- round(as.integer(docentes_no_estables_0)/as.integer(docentes_total_0),3) *100
+porc_docentes_suplentes_0 <- round(as.integer(docentes_suplentes_0)/as.integer(docentes_total_0),3) *100
+porc_total_0 <- porc_docentes_estables_0 + porc_docentes_no_estables_0 + porc_docentes_suplentes_0
+
+docentes_total_mes_0 <- format(sum(indicadores_0$meses_trabajados_suma,na.rm = TRUE),scientific = FALSE)
+docentes_estables_mes_0 <- format(sum(indicadores_0$estables_meses,na.rm = TRUE),scientific = FALSE)
+docentes_no_estables_mes_0 <- format(sum(indicadores_0$no_estables_meses,na.rm = TRUE),scientific = FALSE)
+docentes_suplentes_mes_0 <- format(sum(indicadores_0$suplentes_teoricos_meses,na.rm = TRUE),scientific = FALSE)
+
+porc_docentes_estables_mes_0 <- round(as.integer(docentes_estables_mes_0)/as.integer(docentes_total_mes_0),3) *100
+porc_docentes_no_estables_mes_0 <- round(as.integer(docentes_no_estables_mes_0)/as.integer(docentes_total_mes_0),3) *100
+porc_docentes_suplentes_mes_0 <- round(as.integer(docentes_suplentes_mes_0)/as.integer(docentes_total_mes_0),3) *100
+porc_total_mes_0 <- porc_docentes_estables_mes_0 + porc_docentes_no_estables_mes_0 + porc_docentes_suplentes_mes_0
+
+antiguedad_0 <- round(mean(indicadores_0$antiguedad_promedio_total),2)
+
+sample_df_0 <- df_0[sample(1:nrow(df_0), nrow(df_0)*0.1), ]
+
+sample_df_0.alphabet <- c(1,0)
+sample_df_0.scodes <- c("SI", "NO")
+sample_df_0.labels <- c("mes_trabajado","no_trabajado")
+
+sample_df_0.seq <- seqdef(sample_df_0, 5:64, alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
+                   labels = sample_df_0.labels, xtstep = 2)
+
+Tipo <- c('Estables', 'No_Estables', 'Suplentes','Total')
+Cantidad <- c(docentes_estables_0, docentes_no_estables_0,docentes_suplentes_0,docentes_total_0)
+Porc <- c(porc_docentes_estables_0,porc_docentes_no_estables_0,porc_docentes_suplentes_0,porc_total_0)
+Meses <-c(docentes_estables_mes_0, docentes_no_estables_mes_0,docentes_suplentes_mes_0,docentes_total_mes_0)
+Porc_mes <-c(porc_docentes_estables_mes_0,porc_docentes_no_estables_mes_0,porc_docentes_suplentes_mes_0,porc_total_mes_0)
+
+resumen_0 <- data.frame(Tipo, Cantidad,Porc,Meses,Porc_mes)
+
+
+```
+
+```{r}
+#| context: setup
+#| echo: false
+#| warning: false
+#| message: false
+#| results: 'hide'
+
+df_x<-read_delim('evol_2019_2023_con_revista.csv', delim =",")
+
+df_x <- merge(df_x, escuelas_primarias, by.x = "cueanexo", by.y = "cueanexo", all.x = TRUE)
+
+df_x <- df_x %>% sample_frac(0.1)
+
+df_x[,4:63][df_x[,4:63] == 4] <- 1
+
+df_x[,4:63][df_x[,4:63] == 6] <- 1
+
+df_x[,4:63][df_x[,4:63] == 8] <- 5
+
+df_x[,4:63][df_x[,4:63] == 9] <- 1
+
+colnames(df_x)[4: 63] <- periodo_analisis
+
+df_x.alphabet <- c(1,3,5,0)
+df_x.scodes <- c("Titular","Suplente","Interino","no_trabajado")
+df_x.labels <- c("Titular","Suplente","Interino","no_trabajado")
+
+
+df_x.seq <- seqdef(df_x, 4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+                   labels = df_x.labels, xtstep = 4)
+
+
+```
+
+
+
+# Gráfico de secuencia - Indicadores - Nivel Nacional
+
+## Row
+### Column {width="55%"}
+```{r}
+seqIplot(sample_df_0.seq, sortv = "from.start", with.legend = "right", 
+             main = paste("Secuencia - Muestra"), cex.legend = 0.7)
+invisible()
+```
+### Column {width="45%"}
+```{r}
+knitr::kable(resumen_0, align = "c")
+```
+#### Row
+La antigüedad promedio de un docente a nivel nacional es de `{r} antiguedad_0` meses 
+
+## Row
+
+En el periodo de análisis que es de 60 meses, se usaron  `{r} docentes_total_0` docentes.
+
+Docentes Estables : `{r} docentes_estables_0` son docentes estables, es decir, que han trabajado en una escuela durante el 80% o más del periodo de análisis. Esto representa el  `{r} porc_docentes_estables_0`%  del total.
+
+Docentes No Estabales: `{r} docentes_no_estables_0` son docentes que han trabajado en una escuela entre el 80% y 4 meses del periodo de análisis. Esto representa el `{r} porc_docentes_no_estables_0`%  del total.
+
+Docentes Suplentes Teóricos: `{r} docentes_suplentes_0`  son docentes que han estado en la escuela por periodos muy cortos, entre 3 y 1 mes. Esto representa el `{r} porc_docentes_suplentes_0`%  del total.
+
+La antigüedad promedio de un docente a nivel nacional es de `{r} antiguedad_0` meses .
+
+
+# Gráfico de secuencia - Nivel Provincial   
+
+## Row
+###  {.sidebar}
+
+```{r}
+selectInput("provincia_0", "Seleccionar provincia", 
+            choices=unique(df_0$provincia),selected="Catamarca")
+
+radioButtons("sector_0", "Seleccionar sector", 
+             choices = c("All", unique(df_0$sector)), 
+             selected = "All")
+```
+
+
+### Column {width="52%"}
+```{r}
+plotOutput("seqPlot_0")
+```
+
+### Column  {width="48%"}
+```{r}
+tableOutput("df_provincia_indicadores_0")
+```
+
+#### Row
+
+```{r}
+textOutput("antiguedad_provincia_0")
+```
+
+
+# Grafico de Secuencia Provincial - Evolucion
+
+## Row
+###  {.sidebar}
+
+```{r}
+selectInput("provincia_x", "Seleccionar provincia", 
+            choices=unique(df_x$provincia),selected="Catamarca")
+
+radioButtons("sector_x", "Seleccionar sector", 
+             choices = c("All", unique(df_x$sector)), 
+             selected = "All")
+```
+### Column {width="52%"}
+
+```{r}
+plotOutput("seqPlot_x")
+```
+
+### Column  {width="48%"}
+```{r}
+cpal(df_x.seq)<-c("#7FC97F" ,"#FDC086","#FFFF99","#BEAED4")
+
+seqIplot(df_x.seq, sortv = "from.start", with.legend = "right", 
+             main = paste("Sec Nacional"), cex.legend = 0.7)
+invisible()
+
+```
+
+# Gráfico de secuencia - Nivel Provincial (Sit_Revista)  
+
+## Row
+###  {.sidebar}
+
+```{r}
+selectInput("provincia", "Seleccionar provincia", 
+            choices=unique(df$provincia),selected="Catamarca")
+
+radioButtons("sector", "Seleccionar sector", 
+             choices = c("All", unique(df$sector)), 
+             selected = "All")
+
+radioButtons("revista", "Seleccionar sit. Revista", 
+             choices = c("All", unique(df$REVISTA_DESC)), 
+             selected = "All")
+
+
+```
+
+### Column {width="52%"}
+```{r}
+plotOutput("seqPlot")
+```
+
+
+### Column  {width="48%"}
+```{r}
+tableOutput("df_provincia_indicadores")
+```
+
+
+
+```{r}
+#| context: server
+
+####
+
+indicadores_filtrados_0 <- reactive(
+{
+if (input$sector_0 == "All") {
+    # If "All" is selected, filter only by provincia
+    indicadores_0 %>% filter(provincia == input$provincia_0)
+  } else {
+    # Otherwise, filter by both provincia and ambito
+    indicadores_0 %>% filter(provincia == input$provincia_0 & sector == input$sector_0)
+  }
+})
+
+reactive_indicadores_0 <- reactive({ indicadores_filtrados_0()})
+
+output$df_provincia_indicadores_0 <- renderTable({
+  data_indicadores_0 <- reactive_indicadores_0()
+  
+  # Create a dataframe with the required values
+  data.frame(
+    Tipo = c('Estables', 'No_Estables','Suplentes','Total'),
+    Cantidad = c(
+      format(sum(data_indicadores_0$estables, na.rm = TRUE),scientific = FALSE),  
+      format(sum(data_indicadores_0$no_estables, na.rm = TRUE),scientific = FALSE),
+      format(sum(data_indicadores_0$suplentes_teoricos, na.rm = TRUE),scientific = FALSE),
+      format(sum(data_indicadores_0$cantidad_docentes, na.rm = TRUE),scientific = FALSE)
+    ),
+    Porc = c(
+      round((sum(data_indicadores_0$estables, na.rm = TRUE)/sum(data_indicadores_0$cantidad_docentes, na.rm = TRUE)),3)*100,
+      round((sum(data_indicadores_0$no_estables, na.rm = TRUE)/sum(data_indicadores_0$cantidad_docentes, na.rm = TRUE)),3)*100,
+      round((sum(data_indicadores_0$suplentes_teoricos, na.rm = TRUE)/sum(data_indicadores_0$cantidad_docentes, na.rm = TRUE)),3)*100,
+      round((sum(data_indicadores_0$cantidad_docentes, na.rm = TRUE)/sum(data_indicadores_0$cantidad_docentes, na.rm = TRUE)),3)*100),
+    Meses = c(
+      format(sum(data_indicadores_0$estables_meses, na.rm = TRUE),scientific = FALSE),  
+      format(sum(data_indicadores_0$no_estables_meses, na.rm = TRUE),scientific = FALSE),
+      format(sum(data_indicadores_0$suplentes_teoricos_meses, na.rm = TRUE),scientific = FALSE),
+      format(sum(data_indicadores_0$meses_trabajados_suma, na.rm = TRUE),scientific = FALSE)
+    ),
+    Porc_meses = c(
+      round((sum(data_indicadores_0$estables_meses, na.rm = TRUE)/sum(data_indicadores_0$meses_trabajados_suma, na.rm = TRUE)),3)*100,
+      round((sum(data_indicadores_0$no_estables_meses, na.rm = TRUE)/sum(data_indicadores_0$meses_trabajados_suma, na.rm = TRUE)),3)*100,
+      round((sum(data_indicadores_0$suplentes_teoricos_meses, na.rm = TRUE)/sum(data_indicadores_0$meses_trabajados_suma, na.rm = TRUE)),3)*100,
+      round((sum(data_indicadores_0$meses_trabajados_suma, na.rm = TRUE)/sum(data_indicadores_0$meses_trabajados_suma, na.rm = TRUE)),3)*100)
+    )
+})
+
+
+output$antiguedad_provincia_0 <- renderText({
+  data_indicadores_0 <- reactive_indicadores_0()
+  ant_0 <- round(sum(data_indicadores_0$meses_trabajados_suma)/sum(data_indicadores_0$cantidad_docentes),2)
+  paste ("En la provincia de ",input$provincia,". La antiguedad promedio docente es de :", ant_0)
+  })
+
+
+###
+
+filtered_data_0 <-reactive({
+if (input$sector_0 == "All") {
+    # If "All" is selected, filter only by provincia
+    df_0 %>% filter(provincia == input$provincia_0)
+  } else {
+    # Otherwise, filter by both provincia and ambito
+    df_0 %>% filter(provincia == input$provincia_0 & sector == input$sector_0)
+  }
+})
+
+reactive_seq_0 <- reactive({
+  data_0 <- filtered_data_0()
+  secuencia_prov_0 <- seqdef(data_0,5:64,alphabet = c(1,0),states = c("SI","NO"),
+                                                   labels = c("mes_trabajado", "no_trabajado"), xtstep = 2)
+  return (secuencia_prov_0)
+                          })
+
+output$seqPlot_0 <- renderPlot({
+
+    seqIplot(reactive_seq_0(), sortv = "from.start", with.legend = "right", 
+             main = paste("Secuencia -", input$provincia_0), cex.legend = 0.7)
+      })
+
+
+#####################################################################################################
+
+
+indicadores_filtrados <- reactive({
+  # Handle filtering for both 'sector' and 'SIT_rEVISTA'
+  if (input$sector == "All" & input$revista == "All") {
+    # If both 'sector' and 'SIT_rEVISTA' are set to "All", filter only by 'provincia'
+    indicadores %>% filter(provincia == input$provincia)
+  } else if (input$sector == "All") {
+    # If only 'sector' is "All", filter by 'provincia' and 'SIT_rEVISTA'
+    indicadores %>% filter(provincia == input$provincia & REVISTA_DESC == input$revista)
+  } else if (input$revista == "All") {
+    # If only 'SIT_rEVISTA' is "All", filter by 'provincia' and 'sector'
+    indicadores %>% filter(provincia == input$provincia & sector == input$sector)
+  } else {
+    # Otherwise, filter by all three criteria: 'provincia', 'sector', and 'SIT_rEVISTA'
+    indicadores %>% filter(provincia == input$provincia & 
+                           sector == input$sector & 
+                           REVISTA_DESC == input$revista)
+  }
+})
+
+
+reactive_indicadores <- reactive({ indicadores_filtrados()})
+
+output$df_provincia_indicadores <- renderTable({
+  data_indicadores <- reactive_indicadores()
+  
+  # Create a dataframe with the required values
+  data.frame(
+    Revista = c ('Titular','Titular','Titular','Titular','Suplente','Suplente','Suplente','Suplente','Interino','Interino','Interino','Interino','Total'),
+    Tipo = c('Estables','No_Estables','Supl_Teorico','Sub_total','Estables', 'No_Estables','Supl_Teorico','Sub_total','Estables', 'No_Estables','Supl_Teorico','Sub_total','Total'),
+    Cantidad = c(
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(estables),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(no_estables),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(suplentes_teoricos),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Titular')%>% pull(cantidad_docentes),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(estables),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(no_estables),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(suplentes_teoricos),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Suplente')%>% pull(cantidad_docentes),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(estables),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(no_estables),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(suplentes_teoricos),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores %>% filter (REVISTA_DESC == 'Interino')%>% pull(cantidad_docentes),na.rm=TRUE),scientific = FALSE),
+      format(sum(data_indicadores$cantidad_docentes,na.rm = TRUE),scientific = FALSE)
+      
+    ))
+})
+
+
+
+
+filtered_data <-reactive({
+  # Handle filtering for both 'sector' and 'SIT_rEVISTA'
+  if (input$sector == "All" & input$revista == "All") {
+    # If both 'sector' and 'SIT_rEVISTA' are set to "All", filter only by 'provincia'
+    df %>% filter(provincia == input$provincia)
+  } else if (input$sector == "All") {
+    # If only 'sector' is "All", filter by 'provincia' and 'SIT_rEVISTA'
+    df %>% filter(provincia == input$provincia & REVISTA_DESC == input$revista)
+  } else if (input$revista == "All") {
+    # If only 'SIT_rEVISTA' is "All", filter by 'provincia' and 'sector'
+    df %>% filter(provincia == input$provincia & sector == input$sector)
+  } else {
+    # Otherwise, filter by all three criteria: 'provincia', 'sector', and 'SIT_rEVISTA'
+    df %>% filter(provincia == input$provincia & 
+                           sector == input$sector & 
+                           REVISTA_DESC == input$revista)
+  }
+})
+
+
+reactive_seq <- reactive({
+  data <- filtered_data()
+  secuencia_prov <- seqdef(data,6:65,alphabet = c(1,0),states = c("SI","NO"),
+                                                   labels = c("mes_trabajado", "no_trabajado"), xtstep = 2)
+  
+  return (secuencia_prov)
+                          })
+
+output$seqPlot <- renderPlot({
+    seqIplot(reactive_seq(), sortv = "from.start", with.legend = "right", 
+             main = paste("Secuencia -", input$provincia), cex.legend = 0.7)
+  })
+
+
+################################################################################
+
+
+
+filtered_data_x <-reactive({
+if (input$sector_x == "All") {
+    # If "All" is selected, filter only by provincia
+    df_x %>% filter(provincia == input$provincia_x)
+  } else {
+    # Otherwise, filter by both provincia and ambito
+    df_x %>% filter(provincia == input$provincia_x & sector == input$sector_x)
+  }
+})
+
+reactive_seq_x <- reactive({
+  data_x <- filtered_data_x()
+  secuencia_prov_x <- seqdef(data_x,4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+                   labels = df_x.labels, xtstep = 4)
+  cpal(secuencia_prov_x)<-c("#7FC97F" ,"#FDC086","#FFFF99","#BEAED4")
+  return (secuencia_prov_x)
+                          })
+
+output$seqPlot_x <- renderPlot({
+    seqIplot(reactive_seq_x(), sortv = "from.start", with.legend = "right", 
+             main = paste("Secuencia -", input$provincia_x), cex.legend = 0.7)
+  })
+
+
+
+
+```
