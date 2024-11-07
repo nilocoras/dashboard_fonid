@@ -29,6 +29,7 @@ server: shiny
 #| results: 'hide'
 
 #install.packages(TraMineR)
+#install.packages("networkD3")
 
 library(tidyverse)
 library(readxl)
@@ -40,6 +41,10 @@ library(shinydashboard)
 library(dplyr)
 library(tidyr)
 library(plotly)
+
+library(networkD3)
+
+
 #setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/Archivos_producidos')
 
 df<-read_delim('respaldo_indicadores_2019_2023_con_revista.csv', delim =";")
@@ -274,10 +279,51 @@ data_long_provincias <- evol_total_provincias %>%
   tidyr::pivot_longer(cols = "Titular":"Interino", names_to = "Tipo", values_to = "value") %>%
   mutate(column = factor(Tipo, levels = c("Interino", "Suplente", "Titular")))
 
-
-
 ``` 
 
+```{r}
+#| context: setup
+#| echo: false
+#| warning: false
+#| message: false
+#| results: 'hide'
+
+
+rotacion<-read_delim('evolucion_estado_dic_22_vs_todo_23.csv', delim =",")
+
+rotacion.alphabet <- c('sin cambio','otro (cambio o dejo la escuela)','abandono sistema','cambio_puesto','ascenso (dire_vice)')
+rotacion.scodes <- c("Titular","Cambio de escuela","Abandono el sistema","Cambio de puesto", "Ascenso")
+rotacion.labels <- c("Titular","cambio de escuela","Abandono el sistema","Cambio de puesto", "Ascenso")
+
+
+rotacion.seq <- seqdef(rotacion, 74:85, alphabet =rotacion.alphabet , states = rotacion.scodes, 
+                   labels = rotacion.labels, xtstep = 5)
+
+
+nodos <- data.frame(name = c ("Maestro de Grado (Titular) en Escuela X","Cambia de Puesto en la Escuela X","Asciende a directivo en la Escuela X","Abandona Sist. Educativo","Deja la Escuela X por otra","Mantiene su posicion en la Escuela X"))
+
+links <- data.frame(
+  partida = rep(0, 5),
+  objetivo =c(1, 2, 3, 4, 5),
+  valores = c(sum(rotacion$estado_final12 == "cambio_puesto")
+              ,sum(rotacion$estado_final12 == "ascenso (dire_vice)")
+              ,sum(rotacion$estado_final12 == "abandono sistema"),
+              sum(rotacion$estado_final12 == "otro (cambio o dejo la escuela)")
+              ,sum(rotacion$estado_final12 == "sin cambio")) 
+)
+
+total <- sum(links$valores)
+
+nodos$name <- c(
+  "Maestro de Grado (Titular) en Escuela X",
+  paste("Cambia de Puesto en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "cambio_puesto") / total, 1), "%)", sep = ""),
+  paste("Asciende a directivo en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "ascenso (dire_vice)") / total, 1), "%)", sep = ""),
+  paste("Abandona Sist. Educativo (", round(100 * sum(rotacion$estado_final12 == "abandono sistema") / total, 1), "%)", sep = ""),
+  paste("Deja la Escuela X por otra (", round(100 * sum(rotacion$estado_final12 == "otro (cambio o dejo la escuela)") / total, 1), "%)", sep = ""),
+  paste("Mantiene su posicion en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "sin cambio") / total, 1), "%)", sep = "")
+)
+
+```
 
 # Gráfico de secuencia - Indicadores - Nivel Nacional
 
@@ -475,8 +521,6 @@ textOutput("antiguedad_provincia_0")
 
 # Evolución de la planta de Maestros de Grado
 
-
-
 ##  {.sidebar}
 ```{r}
 selectInput("provincia_barras", "Seleccionar provincia", 
@@ -546,6 +590,81 @@ En esta sección de gráficos, cada línea de datos representa una combinación 
 Esta diferencia en la forma de contar hace que los totales no coincidan con los gráficos anteriores, donde cada combinación de CUE y CUIL era tratada de manera individual. Sin embargo, esta estructura es útil para analizar cuál es el tipo de situación de revista (como titular, suplente o interino) que predomina entre los distintos tipos de docentes: estables, no estables y temporales.
 
 
+# Rotación de Docentes Titulares
+
+
+## Row
+
+### Column {width = 70%}
+
+```{r}
+seqdplot(rotacion.seq , sortv = "from.start", with.legend = FALSE ,main = paste("Evolución Maestros Titulares dic/22-23"), cex.legend = 0.7)
+invisible()
+
+cpal(rotacion.seq)<-c("#7FC97F", "#BEAED4" ,"#FDC086", "#FFFF99","#386CB0" )
+
+```
+
+### Column {width = 35%}
+
+```{r}
+#install.packages("networkD3")
+library(networkD3)
+library(htmlwidgets)
+
+node_colors <- 'd3.scaleOrdinal(["#4CAF50","#386CB0","#FFFF99","#FDC086","#BEAED4","#7FC97F"])'
+
+
+sankey <- sankeyNetwork(Links = links, Nodes = nodos, Source = "partida", Target = "objetivo", Value = "valores", NodeID = "name", units = "Docentes", fontSize = 12, nodeWidth = 40,colourScale = node_colors)
+
+sankey_with_title <- htmlwidgets::prependContent(
+  sankey,
+  htmltools::tags$h5("Estado Maestro Titular Dic 22 vs Dic 23",style = "font-weight: bold;text-align: center;font-seize: 11;"))
+
+sankey_with_title
+```
+
+## Row 
+
+En esta sección, se analiza la rotación de los maestros de grado titulares al finalizar el año 2022. Se busca visualizar su situación en el siguiente año y clasificar los posibles escenarios:
+
+- Continúan en la misma escuela en la que trabajaban.
+- Abandonan el sistema educativo.
+- Cambian de puesto en la misma escuela
+- Dejan la escuela, pero se mantienen en el sistema.
+- Ascienden a un puesto directivo.
+
+
+
+# Rotación de Docentes Titulares - Nivel Provincial
+
+## Row
+### Column {width="15%"}
+
+####  {.sidebar}
+
+```{r}
+selectInput("provincia_rotacion", "Seleccionar provincia", 
+            choices=unique(rotacion$provincia),selected="Catamarca")
+
+radioButtons("sector_rotacion", "Seleccionar sector", 
+             choices = c("All", unique(rotacion$sector)), 
+             selected = "All")
+```
+
+### Column {width="52%"}
+```{r}
+plotOutput("seqPlot_rotacion")
+```
+
+### Column {width="32%"}
+```{r}
+
+sankeyNetworkOutput("sankey_rotacion_provincia")
+```
+
+
+
 ```{r}
 #| context: server
 
@@ -602,6 +721,7 @@ output$antiguedad_provincia_0 <- renderText({
   dif <- ant_0 - antiguedad_0
   paste ("En la provincia de ",input$provincia_0,". La continuidad promedio docente es de :", ant_0, '. En tanto la continuidad a nivel nacional es de: ', antiguedad_0, '. La diferencia es de ', dif , 'si ésta es positiva, denotaría un continuidad mayor de sus docentes con respecto al promedio nacional y si es negativa sería lo contrario.')  
   })
+
 
 
 ###
@@ -782,5 +902,102 @@ output$suplente_provincia <-  renderValueBox({valueBox(value=round(sum(filtered_
 
 
 output$titular_provincia <- renderValueBox({valueBox(value=round(sum(filtered_data_barras()%>% filter(Tipo == "Titular") %>% pull(value))/60,0), subtitle = paste ("Promedio - Titular",input$provincia_barras))})
+
+
+
+#########################################################################################################
+
+
+filtered_data_rotacion <-reactive({
+if (input$sector_rotacion == "All") {
+    # If "All" is selected, filter only by provincia
+    rotacion %>% filter(provincia == input$provincia_rotacion)
+  } else {
+    # Otherwise, filter by both provincia and ambito
+    rotacion %>% filter(provincia == input$provincia_rotacion & sector == input$sector_rotacion)
+  }
+})
+
+reactive_seq_rotacion <- reactive({
+  data_rotacion <- filtered_data_rotacion()
+  secuencia_prov_rotacion <- seqdef(data_rotacion,74:85, alphabet = rotacion.alphabet, states = rotacion.scodes, 
+                   labels = rotacion.labels, xtstep = 5)
+  cpal(secuencia_prov_rotacion)<-c("#7FC97F", "#BEAED4" ,"#FDC086", "#386CB0","#FFFF99" )
+                
+
+  return (secuencia_prov_rotacion)
+                          })
+
+output$seqPlot_rotacion <- renderPlot({
+    seqdplot(reactive_seq_rotacion(),sortv = "from.start", with.legend = FALSE ,
+             main = paste("Evol. Maestros Titulares ", input$provincia_rotacion), cex.legend = 0.7)
+  })
+
+
+reactive_df_sankey_rotacion <- reactive({
+  # Create nodes and links data frames
+  nodos_fil <- data.frame(name = c(
+    "Maestro de Grado (Titular) en Escuela X",
+    "Cambia de Puesto en la Escuela X",
+    "Asciende a directivo en la Escuela X",
+    "Abandona Sist. Educativo",
+    "Deja la Escuela X por otra",
+    "Mantiene su posicion en la Escuela X"
+  ))
+
+  links_fil <- data.frame(
+    partida = rep(0, 5),
+    objetivo = c(1, 2, 3, 4, 5),
+    valores = c(
+      sum(filtered_data_rotacion()$estado_final12 == "cambio_puesto"),
+      sum(filtered_data_rotacion()$estado_final12 == "ascenso (dire_vice)"),
+      sum(filtered_data_rotacion()$estado_final12 == "abandono sistema"),
+      sum(filtered_data_rotacion()$estado_final12 == "otro (cambio o dejo la escuela)"),
+      sum(filtered_data_rotacion()$estado_final12 == "sin cambio")
+    )
+  )
+
+  # Calculate total for percentages
+  total_fil <- sum(links_fil$valores)
+
+  # Update node names with percentages
+  nodos_fil$name <- c(
+    "Maestro de Grado (Titular) en Escuela X",
+    paste("Cambia de Puesto en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "cambio_puesto") / total_fil, 1), "%)", sep = ""),
+    paste("Asciende a directivo en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "ascenso (dire_vice)") / total_fil, 1), "%)", sep = ""),
+    paste("Abandona Sist. Educativo (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "abandono sistema") / total_fil, 1), "%)", sep = ""),
+    paste("Deja la Escuela X por otra (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "otro (cambio o dejo la escuela)") / total_fil, 1), "%)", sep = ""),
+    paste("Mantiene su posicion en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "sin cambio") / total_fil, 1), "%)", sep = "")
+  )
+
+  # Return the data frames as a list
+  list(links_fil = links_fil, nodos_fil = nodos_fil)
+})
+
+output$sankey_rotacion_provincia <- renderSankeyNetwork({
+  # Retrieve reactive data
+  data <- reactive_df_sankey_rotacion()
+  
+  # Define the color scale for nodes (optional)
+  node_colors <- 'd3.scaleOrdinal(["#4CAF50","#386CB0","#FFFF99","#FDC086","#BEAED4","#7FC97F"])'
+  
+  
+  
+  # Create Sankey diagram with title
+  sankey_fil <- sankeyNetwork(
+    Links = data$links_fil,
+    Nodes = data$nodos_fil,
+    Source = "partida",
+    Target = "objetivo",
+    Value = "valores",
+    NodeID = "name",
+    units = "Docentes",
+    fontSize = 12,
+    nodeWidth = 40,
+    colourScale = node_colors
+  )
+
+})
+
 
 ```
