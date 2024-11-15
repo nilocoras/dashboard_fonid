@@ -274,7 +274,6 @@ evol_total_provincias$fecha <- as.Date(evol_total_provincias$fecha, format="%d-%
 colnames(evol_total_provincias) <- c("Titular", "Suplente","Interino","provincia","fecha")
 
 
-
 data_long_provincias <- evol_total_provincias %>%
   tidyr::pivot_longer(cols = "Titular":"Interino", names_to = "Tipo", values_to = "value") %>%
   mutate(column = factor(Tipo, levels = c("Interino", "Suplente", "Titular")))
@@ -906,6 +905,7 @@ output$titular_provincia <- renderValueBox({valueBox(value=round(sum(filtered_da
 
 
 #########################################################################################################
+
 
 
 filtered_data_rotacion <-reactive({
