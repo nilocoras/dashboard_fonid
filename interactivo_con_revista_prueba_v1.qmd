@@ -1,11 +1,12 @@
 ---
-title: "FONID - Nivel Primario (2019-2023)"
+title: "FONID - Nivel Primario (2018-2023)"
 format:
   dashboard:
     scrolling: true
     theme: Lumen
 server: shiny
 ---
+
 ```{css}
   tags$style(HTML("
     table.data {
@@ -19,7 +20,6 @@ server: shiny
   align-items: center; /* Optional: Center vertically */
 }
 ```
-
 
 ```{r}
 #| context: setup
@@ -45,23 +45,23 @@ library(plotly)
 library(networkD3)
 
 
-#setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/Archivos_producidos')
+#setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/dashboard_fonid/')
 
-df<-read_delim('respaldo_indicadores_2019_2023_con_revista.csv', delim =";")
-indicadores <- read_excel('indicadores_2019_2023_con_revista.xlsx')
+df<-read_delim('respaldo_indicadores_2018_2023_con_revista.csv', delim =",")
+indicadores <- read_excel('indicadores_2018_2023_con_revista.xlsx')
 escuelas_primarias <- read_csv('padron_escuelas_primarias.csv') 
 escuelas_primarias$cueanexo <- as.integer(escuelas_primarias$cueanexo)
 
 df <- df %>% sample_frac(0.1)
 df<-df[-1, ]
-prueba<-df[,6:65]
-df[,6:65][is.na(df[,6:65])] <- 0
-df[,6:65][df[,6:65] > 1] <- 1
+prueba<-df[,6:(65+12)]
+df[,6:(65+12)][is.na(df[,6:(65+12)])] <- 0
+df[,6:(65+12)][df[,6:(65+12)] > 1] <- 1
 df<-df[-1, ]
 colnames(df)
-periodo_analisis <- seq(as.Date("2019-01-01"), as.Date("2023-12-01"), by = "month")
+periodo_analisis <- seq(as.Date("2018-01-01"), as.Date("2023-12-01"), by = "month")
 periodo_analisis <- format(periodo_analisis, "%b %Y")
-colnames(df)[6: 65] <- periodo_analisis
+colnames(df)[6: (65+12)] <- periodo_analisis
 
 df <- merge(df, escuelas_primarias, by.x = "cueanexo", by.y = "cueanexo", all.x = TRUE)
 
@@ -132,14 +132,14 @@ antiguedad <- round(mean(indicadores$antiguedad_promedio_total),2)
 #| results: 'hide'
 
 
-df_0<-read_delim('respaldo_indicadores_2019_2023.csv', delim =";")
-indicadores_0 <- read_excel('indicadores_2019_2023.xlsx')
+df_0<-read_delim('respaldo_indicadores_2018_2023.csv', delim =",")
+indicadores_0 <- read_excel('indicadores_2018_2023.xlsx')
 df_0 <- df_0 %>% sample_frac(0.1)
 df_0<-df_0[-1, ]
-df_0[,5:64][is.na(df_0[,5:64])] <- 0
-df_0[,5:64][df_0[,5:64] > 1] <- 1
+df_0[,5:(64+12)][is.na(df_0[,5:(64+12)])] <- 0
+df_0[,5:(64+12)][df_0[,5:(64+12)] > 1] <- 1
 df_0<-df_0[-1, ]
-colnames(df_0)[5: 64] <- periodo_analisis
+colnames(df_0)[5: (64+12)] <- periodo_analisis
 df_0 <- merge(df_0, escuelas_primarias, by.x = "cueanexo", by.y = "cueanexo", all.x = TRUE)
 
 
@@ -173,7 +173,7 @@ sample_df_0.alphabet <- c(1,0)
 sample_df_0.scodes <- c("SI", "NO")
 sample_df_0.labels <- c("mes_trabajado","no_trabajado")
 
-sample_df_0.seq <- seqdef(sample_df_0, 5:64, alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
+sample_df_0.seq <- seqdef(sample_df_0, 5:(64+12), alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
                    labels = sample_df_0.labels, xtstep = 2)
 
 Tipo <- c('Estables', 'No_Estables', 'Temporales','Total')
@@ -194,31 +194,28 @@ resumen_0 <- data.frame(Tipo, Cantidad,Porc,Meses,Porc_mes)
 #| message: false
 #| results: 'hide'
 
-df_x<-read_delim('evol_2019_2023_con_revista.csv', delim =",")
+df_x<-read_delim('evol_2018_2023_con_revista.csv', delim =",")
 
 df_x <- merge(df_x, escuelas_primarias, by.x = "cueanexo", by.y = "cueanexo", all.x = TRUE)
 
 df_x <- df_x %>% sample_frac(0.1)
 
-df_x[,4:63][df_x[,4:63] == 4] <- 1
+#df_x[,4:(63+12)][df_x[,4:(63+12)] == 4] <- 1
+#df_x[,4:63+12][df_x[,4:(63+12)] == 6] <- 1
+#df_x[,4:63+12][df_x[,4:(63+12)] == 8] <- 5
+#df_x[,4:63+12][df_x[,4:(63+12)] == 9] <- 1
 
-df_x[,4:63][df_x[,4:63] == 6] <- 1
-
-df_x[,4:63][df_x[,4:63] == 8] <- 5
-
-df_x[,4:63][df_x[,4:63] == 9] <- 1
-
-colnames(df_x)[4: 63] <- periodo_analisis
+colnames(df_x)[4: (63+12)] <- periodo_analisis
 
 df_x.alphabet <- c(1,3,5,0)
 df_x.scodes <- c("Titular","Suplente","Interino","no_trabajado")
 df_x.labels <- c("Titular","Suplente","Interino","no_trabajado")
 
-df_x.seq <- seqdef(df_x, 4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+df_x.seq <- seqdef(df_x, 4:(63+12), alphabet = df_x.alphabet, states = df_x.scodes, 
                    labels = df_x.labels, xtstep = 4)
 
 
-df_temp<-read_delim('respaldo_indicadores_2019_2023.csv', delim =";")
+df_temp<-read_delim('respaldo_indicadores_2018_2023.csv', delim =",")
 
 df_xx_tipo<-merge(df_x,df_temp[,c('cueanexo','CUIL','meses_trabajados')], by =c('cueanexo','CUIL'), all.x = TRUE)
 
@@ -227,7 +224,6 @@ df_x_tipo <- df_xx_tipo %>% sample_frac(0.1)
 rm(df_temp)
 
 ```
-
 
 ```{r}
 #| context: setup
@@ -238,7 +234,7 @@ rm(df_temp)
 
 library(plotly)
 
-evol_x_mes<-read_delim('evolucion_resumen_solo_activos_por_mes_2019_2023.csv', delim =",")
+evol_x_mes<-read_delim('evolucion_resumen_solo_activos_por_mes_2018_2023.csv', delim =",")
 evol_total <- evol_x_mes %>% filter (provincia == 'Todos')
 evol_total <- evol_total[,3:7]
 evol_total$fecha <- as.Date(evol_total$fecha, format="%d-%m-%Y" )
@@ -278,7 +274,7 @@ data_long_provincias <- evol_total_provincias %>%
   tidyr::pivot_longer(cols = "Titular":"Interino", names_to = "Tipo", values_to = "value") %>%
   mutate(column = factor(Tipo, levels = c("Interino", "Suplente", "Titular")))
 
-``` 
+```
 
 ```{r}
 #| context: setup
@@ -313,14 +309,35 @@ links <- data.frame(
 
 total <- sum(links$valores)
 
+
+
+# Calculate average age by final state
+antigueda_prom_estado <- rotacion %>%
+  group_by(estado_final12) %>%
+  summarize(avg_ant = mean(ANTIG))
+
+# Map state names to numerical codes
+mappeado <- c(`abandono sistema` = 3, `ascenso (dire_vice)` = 2, `cambio_puesto` = 1, `otro (cambio o dejo la escuela)` = 4, `sin cambio` = 5)
+antigueda_prom_estado$estado_final12 <- mappeado[antigueda_prom_estado$estado_final12]
+
+# Merge the average age with the links data frame
+links <- links %>%
+  left_join(antigueda_prom_estado, by = c('objetivo' = 'estado_final12'))
+
+# Add tooltip with average age
+links$tooltip <- paste("Ant Promedio:", round(links$avg_ant, 2))
+
+
+
 nodos$name <- c(
   "Maestro de Grado (Titular) en Escuela X",
-  paste("Cambia de Puesto en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "cambio_puesto") / total, 1), "%)", sep = ""),
-  paste("Asciende a directivo en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "ascenso (dire_vice)") / total, 1), "%)", sep = ""),
-  paste("Abandona Sist. Educativo (", round(100 * sum(rotacion$estado_final12 == "abandono sistema") / total, 1), "%)", sep = ""),
-  paste("Deja la Escuela X por otra (", round(100 * sum(rotacion$estado_final12 == "otro (cambio o dejo la escuela)") / total, 1), "%)", sep = ""),
-  paste("Mantiene su posicion en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "sin cambio") / total, 1), "%)", sep = "")
+  paste("Cambia de Puesto en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "cambio_puesto") / total, 1), "%) - ", links[links$objetivo == 1, "tooltip"] , sep = ""),
+  paste("Asciende a directivo en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "ascenso (dire_vice)") / total, 1), "%) - ",links[links$objetivo == 2, "tooltip"], sep = ""),
+  paste("Abandona Sist. Educativo (", round(100 * sum(rotacion$estado_final12 == "abandono sistema") / total, 1), "%) - " ,links[links$objetivo == 3, "tooltip"], sep = ""),
+  paste("Deja la Escuela X por otra (", round(100 * sum(rotacion$estado_final12 == "otro (cambio o dejo la escuela)") / total, 1), "%) - ",links[links$objetivo == 4, "tooltip"], sep = ""),
+  paste("Mantiene su posicion en la Escuela X (", round(100 * sum(rotacion$estado_final12 == "sin cambio") / total, 1), "%) - ",links[links$objetivo == 5, "tooltip"], sep = "")
 )
+
 
 ```
 
@@ -329,6 +346,7 @@ nodos$name <- c(
 ## Row {height = "60 px"}
 
 ### Column {width="50%"}
+
 ```{r}
 
 
@@ -338,7 +356,6 @@ seqIplot(sample_df_0.seq, sortv = "from.start", with.legend = "right",
              main = paste("Sec Nacional"), cex.legend = 0.7)
 invisible()
 ```
-
 
 ### Column {width="50%"}
 
@@ -353,24 +370,25 @@ invisible()
 
 ```
 
-
 ## Row {height = "60px"}
- 
+
 ### Column {width="50%"}
+
 ```{r}
 knitr::kable(resumen_0, align = "c")
 ```
-### Column  {width="50%"}
 
-En el periodo de análisis que es de 60 meses, se usaron  `{r} docentes_total_0` docentes, en este periodo la continuidad de los docentes en una escuela es de `{r} antiguedad_0` meses en promedio . En el gráfico de la izquierda se muestra la continuidad de los docentes independientemente de su situación de revista, en el gráfico de la derecha se muestra esa continuidad desagregada por situación de revista
+### Column {width="50%"}
+
+En el periodo de análisis que es de 72 meses, se usaron `{r} docentes_total_0` docentes, en este periodo la continuidad de los docentes en una escuela es de `{r} antiguedad_0` meses en promedio . En el gráfico de la izquierda se muestra la continuidad de los docentes independientemente de su situaciC3n de revista, en el gráfico de la derecha se muestra esa continuidad desagregada por situaciC3n de revista
 
 Adicionalmente los docente fueron tipificados, según su continuidad en las escuelas.
 
-`{r} strong("Docentes Estables")` : `{r} docentes_estables_0` son docentes estables, es decir, que han trabajado en una escuela durante el 80% o más del periodo de análisis. Esto representa el  `{r} porc_docentes_estables_0`%  del total. Se puede observar en el gráfico de la derecha que estos están compuestos principalmente por docentes titulares y se evidencia en la  gruesa mancha verde que atraviesa el gráfico, en  tanto los suplentes (naranja) y los interinos (amarillos) aportan en menor medida.
+`{r} strong("Docentes Estables")` : `{r} docentes_estables_0` son docentes estables, es decir, que han trabajado en una escuela durante el 80% o más del periodo de análisis. Esto representa el `{r} porc_docentes_estables_0`% del total. Se puede observar en el gráfico de la derecha que estos están compuestos principalmente por docentes titulares y se evidencia en la gruesa mancha verde que atraviesa el gráfico, en tanto los suplentes (naranja) y los interinos (amarillos) aportan en menor medida.
 
-`{r} strong("Docentes No Estabales")` : `{r} docentes_no_estables_0` son docentes que han trabajado en una escuela entre el 80% y 4 meses del periodo de análisis. Esto representa el `{r} porc_docentes_no_estables_0`%  del total.
+`{r} strong("Docentes No Estabales")` : `{r} docentes_no_estables_0` son docentes que han trabajado en una escuela entre el 80% y 4 meses del periodo de análisis. Esto representa el `{r} porc_docentes_no_estables_0`% del total.
 
-`{r} strong("Temporales")`: `{r} docentes_suplentes_0`  son docentes que han estado en la escuela por periodos muy cortos, entre 3 y 1 mes. Esto representa el `{r} porc_docentes_suplentes_0`%  del total. Si bien representa una cantidad importante de docentes su estadía en las escuelas es muy corta, se puede ver en lo vacíos con puntos intermitentes.
+`{r} strong("Temporales")`: `{r} docentes_suplentes_0` son docentes que han estado en la escuela por periodos muy cortos, entre 3 y 1 mes. Esto representa el `{r} porc_docentes_suplentes_0`% del total. Si bien representa una cantidad importante de docentes su estadía en las escuelas es muy corta, se puede ver en lo vacíos con puntos intermitentes.
 
 El comportamiento que se describe resume la situación nacional, sin embargo esto puede cambiar dependiendo de la provincia que se analice.
 
@@ -383,8 +401,8 @@ Para mayor claridad se hace una desagregación de los gráficos superiores de mo
 ### Column {width="50%"}
 
 ```{r}
-sample_df_0_estables <-  sample_df_0%>% filter(meses_trabajados > 60*0.8)
-sample_df_0_estables.seq <- seqdef(sample_df_0_estables, 5:64, alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
+sample_df_0_estables <-  sample_df_0%>% filter(meses_trabajados > (60+12)*0.8)
+sample_df_0_estables.seq <- seqdef(sample_df_0_estables, 5:(64+12), alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
                    labels = sample_df_0.labels, xtstep = 2)
 
 cpal(sample_df_0_estables.seq)<-c("#C87850","white")
@@ -403,8 +421,8 @@ invisible()
 
 #df_x_tipo <- df_x_tipo %>% sample_frac(0.1)
 
-df_x_tipo_estables <-  df_x_tipo%>% filter(meses_trabajados > 60*0.8)
-df_x_tipo_estables.seq <- seqdef(df_x_tipo_estables, 4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+df_x_tipo_estables <-  df_x_tipo%>% filter(meses_trabajados > (60+12)*0.8)
+df_x_tipo_estables.seq <- seqdef(df_x_tipo_estables, 4:(63+12), alphabet = df_x.alphabet, states = df_x.scodes, 
                    labels = df_x.labels, xtstep = 2)
 
 cpal(df_x_tipo_estables.seq)<-c("#7FC97F" ,"#FDC086","#FFFF99","white")
@@ -419,8 +437,8 @@ rm(df_temp)
 ### Column {width="50%"}
 
 ```{r}
-sample_df_0_estables <-  sample_df_0%>% filter(meses_trabajados < 60*0.8 & meses_trabajados > 3)
-sample_df_0_estables.seq <- seqdef(sample_df_0_estables, 5:64, alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
+sample_df_0_estables <-  sample_df_0%>% filter(meses_trabajados < (60+12)*0.8 & meses_trabajados > 3)
+sample_df_0_estables.seq <- seqdef(sample_df_0_estables, 5:(64+12), alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
                    labels = sample_df_0.labels, xtstep = 2)
 
 cpal(sample_df_0_estables.seq)<-c("#C87850","white")
@@ -433,8 +451,8 @@ invisible()
 ```{r}
 #setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/dashboard_fonid')
 
-df_x_tipo_estables <-  df_x_tipo%>% filter(meses_trabajados < 60*0.8 & meses_trabajados > 3 )
-df_x_tipo_estables.seq <- seqdef(df_x_tipo_estables, 4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+df_x_tipo_estables <-  df_x_tipo%>% filter(meses_trabajados < (60+12)*0.8 & meses_trabajados > 3 )
+df_x_tipo_estables.seq <- seqdef(df_x_tipo_estables, 4:(63+12), alphabet = df_x.alphabet, states = df_x.scodes, 
                    labels = df_x.labels, xtstep = 2)
 
 cpal(df_x_tipo_estables.seq)<-c("#7FC97F" ,"#FDC086","#FFFF99","white")
@@ -450,7 +468,7 @@ invisible()
 
 ```{r}
 sample_df_0_estables <-  sample_df_0%>% filter(meses_trabajados <= 3)
-sample_df_0_estables.seq <- seqdef(sample_df_0_estables, 5:64, alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
+sample_df_0_estables.seq <- seqdef(sample_df_0_estables, 5:(64+12), alphabet = sample_df_0.alphabet, states = sample_df_0.scodes, 
                    labels = sample_df_0.labels, xtstep = 2)
 
 cpal(sample_df_0_estables.seq)<-c("#C87850","white")
@@ -464,7 +482,7 @@ invisible()
 #setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/dashboard_fonid')
 
 df_x_tipo_estables <-  df_x_tipo%>% filter( meses_trabajados <= 3 )
-df_x_tipo_estables.seq <- seqdef(df_x_tipo_estables, 4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+df_x_tipo_estables.seq <- seqdef(df_x_tipo_estables, 4:(63+12), alphabet = df_x.alphabet, states = df_x.scodes, 
                    labels = df_x.labels, xtstep = 2)
 
 cpal(df_x_tipo_estables.seq)<-c("#7FC97F" ,"#FDC086","#FFFF99","white")
@@ -474,9 +492,7 @@ invisible()
 
 ```
 
-
-
-# Gráfico de secuencia - Nivel Provincial   
+# Gráfico de secuencia - Nivel Provincial
 
 ##  {.sidebar}
 
@@ -489,7 +505,6 @@ radioButtons("sector_0", "Seleccionar sector",
              selected = "All")
 ```
 
-
 ## Row
 
 ### Column {width="45%"}
@@ -499,35 +514,37 @@ plotOutput("seqPlot_0")
 ```
 
 ### Column {width="45%"}
+
 ```{r}
 tableOutput("df_provincia_indicadores_0")
 ```
 
 ## Row
 
-### Column  {width="45%"}
+### Column {width="45%"}
+
 ```{r}
 
 plotOutput("seqPlot_x")
 ```
 
-### Column  {width="45%"}
+### Column {width="45%"}
 
 ```{r}
 textOutput("antiguedad_provincia_0")
 ```
 
-
 # Evolución de la planta de Maestros de Grado
 
 ##  {.sidebar}
+
 ```{r}
 selectInput("provincia_barras", "Seleccionar provincia", 
             choices=unique(data_long_provincias$provincia),selected="Catamarca")
 ```
 
-
 ## Column {width="60%"}
+
 ```{r}
 plotlyOutput("grafico_barras_interactivo_provincia")
 ```
@@ -537,6 +554,7 @@ grafico_barras_interactivo
 ```
 
 ## Column {width="30%"}
+
 ```{r}
 
 box(
@@ -554,9 +572,10 @@ valueBox(round(as.numeric(promedio_total),0),'Cantidad Promedio Total')
 )
 ```
 
-# Gráfico de secuencia - Nivel Provincial (Sit_Revista)  
+# Gráfico de secuencia - Nivel Provincial (Sit_Revista)
 
 ## Row
+
 ###  {.sidebar}
 
 ```{r}
@@ -574,12 +593,13 @@ radioButtons("revista", "Seleccionar sit. Revista",
 ```
 
 ### Column {width="52%"}
+
 ```{r}
 plotOutput("seqPlot")
 ```
 
+### Column {width="48%"}
 
-### Column  {width="48%"}
 ```{r}
 tableOutput("df_provincia_indicadores")
 ```
@@ -588,56 +608,71 @@ En esta sección de gráficos, cada línea de datos representa una combinación 
 
 Esta diferencia en la forma de contar hace que los totales no coincidan con los gráficos anteriores, donde cada combinación de CUE y CUIL era tratada de manera individual. Sin embargo, esta estructura es útil para analizar cuál es el tipo de situación de revista (como titular, suplente o interino) que predomina entre los distintos tipos de docentes: estables, no estables y temporales.
 
-
 # Rotación de Docentes Titulares
-
 
 ## Row
 
-### Column {width = 70%}
+### Column {width = 45%}
 
 ```{r}
-seqdplot(rotacion.seq , sortv = "from.start", with.legend = FALSE ,main = paste("Evolución Maestros Titulares dic/22-23"), cex.legend = 0.7)
+seqdplot(rotacion.seq , sortv = "from.start", with.legend = FALSE ,main = paste("EvoluciC3n Maestros Titulares dic/22-23"), cex.legend = 0.7)
 invisible()
 
 cpal(rotacion.seq)<-c("#7FC97F", "#BEAED4" ,"#FDC086", "#FFFF99","#386CB0" )
 
 ```
 
-### Column {width = 35%}
+### Column {width = 55%}
 
 ```{r}
 #install.packages("networkD3")
 library(networkD3)
 library(htmlwidgets)
 
+
 node_colors <- 'd3.scaleOrdinal(["#4CAF50","#386CB0","#FFFF99","#FDC086","#BEAED4","#7FC97F"])'
 
-
-sankey <- sankeyNetwork(Links = links, Nodes = nodos, Source = "partida", Target = "objetivo", Value = "valores", NodeID = "name", units = "Docentes", fontSize = 12, nodeWidth = 40,colourScale = node_colors)
-
+sankey <- sankeyNetwork(
+  Links = links,
+  Nodes = nodos,
+  Source = "partida",
+  Target = "objetivo",
+  Value = "valores",
+  NodeID = "name",
+  units = "",
+  fontSize = 12,
+  nodeWidth = 40,
+  colourScale = node_colors
+)
+# Add a title to the Sankey diagram
 sankey_with_title <- htmlwidgets::prependContent(
   sankey,
-  htmltools::tags$h5("Estado Maestro Titular Dic 22 vs Dic 23",style = "font-weight: bold;text-align: center;font-seize: 11;"))
+  htmltools::tags$h5(
+    "Estado Maestro Titular Dic 22 vs Dic 23",
+    style = "font-weight: bold; text-align: center; font-size: 11px;"
+  )
+)
+
+# Display the Sankey diagram with tooltips and title
 
 sankey_with_title
+
 ```
 
-## Row 
+## Row
 
 En esta sección, se analiza la rotación de los maestros de grado titulares al finalizar el año 2022. Se busca visualizar su situación en el siguiente año y clasificar los posibles escenarios:
 
-- Continúan en la misma escuela en la que trabajaban.
-- Abandonan el sistema educativo.
-- Cambian de puesto en la misma escuela
-- Dejan la escuela, pero se mantienen en el sistema.
-- Ascienden a un puesto directivo.
-
-
+-   Continúan en la misma escuela en la que trabajaban.
+-   Abandonan el sistema educativo.
+-   Cambian de puesto en la misma escuela
+-   Dejan la escuela, pero se mantienen en el sistema.
+-   Ascienden a un puesto directivo.
 
 # Rotación de Docentes Titulares - Nivel Provincial
 
 ## Row
+
 ### Column {width="15%"}
 
 ####  {.sidebar}
@@ -651,18 +686,117 @@ radioButtons("sector_rotacion", "Seleccionar sector",
              selected = "All")
 ```
 
-### Column {width="52%"}
+### Column {width="42%"}
+
 ```{r}
 plotOutput("seqPlot_rotacion")
 ```
 
-### Column {width="32%"}
+### Column {width="42%"}
+
 ```{r}
 
 sankeyNetworkOutput("sankey_rotacion_provincia")
 ```
 
+# Cantidad de Maestros de Grado (cuiles) 2018-2023
 
+```{r}
+#setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/dashboard_fonid')
+evol_cuiles <-read_delim('cantidad_cuiles_maestros.csv', delim =",")
+
+evol_cuiles$fecha <- as.Date(paste("01", evol_cuiles$fecha, sep = "/"), format = "%d/%m/%Y")
+
+fig_evolucion_cuil <-plot_ly(data=evol_cuiles,x=~fecha,y =~num_personas, type = 'scatter',mode='lines', line = list(color = 'blue', width = 2)) %>%
+  layout(title = 'Cuiles por mes - Maestro de Grado',
+         yaxis  = list(title = 'Cantidad',range = c(150000, 250000)),
+         xaxis = list(title = 'Fecha'))
+
+fig_evolucion_cuil
+
+```
+
+
+#  Secuencia - CUILES
+
+##  Row
+
+```{r}
+
+secuencia_cuiles <-read_delim('secuencia_cuiles_maestros.csv', delim =",")
+
+secuencia_cuiles <- sample_frac(secuencia_cuiles, size = 0.1)
+
+colnames(secuencia_cuiles)[3: (4+72)] <- periodo_analisis
+
+secuencia_cuiles.alphabet <- c(1,0)
+secuencia_cuiles.scodes <- c("SI", "NO")
+secuencia_cuiles.labels <- c("mes_trabajado","no_trabajado")
+
+secuencia_cuiles.seq <- seqdef(secuencia_cuiles, 3:(2+72), alphabet = secuencia_cuiles.alphabet, states = secuencia_cuiles.scodes, 
+                   labels = secuencia_cuiles.labels, xtstep = 2)
+
+
+cpal(secuencia_cuiles.seq)<-c("#7FC97F" ,"white")
+
+seqIplot(secuencia_cuiles.seq, sortv = "from.start", with.legend = "right", 
+             main = paste("Sec Nacional"), cex.legend = 0.7)
+invisible()
+
+
+```
+
+
+
+```{r}
+
+secuencia_cuiles_clasificados <-read_delim('secuencia_cuiles_maestros_clasificados.csv', delim =",")
+
+secuencia_cuiles_clasificados <- sample_frac(secuencia_cuiles_clasificados, size = 0.1)
+
+colnames(secuencia_cuiles_clasificados)[3: (4+72)] <- periodo_analisis
+
+secuencia_cuiles_clasificados.alphabet <- c(1,2,5,4,3,0)
+secuencia_cuiles_clasificados.scodes <- c("Permanete","Salida","Intermitente","Corto_Continuo","Ingreso","No_Trabajado")
+secuencia_cuiles_clasificados.labels <- c("Permanete","Salida","Intermitente","Corto_Continuo","Ingreso","No_Trabajado")
+
+secuencia_cuiles_clasificados.seq <- seqdef(secuencia_cuiles_clasificados, 3:(2+72), alphabet = secuencia_cuiles_clasificados.alphabet, states = secuencia_cuiles_clasificados.scodes, 
+                   labels = secuencia_cuiles_clasificados.labels, xtstep = 6)
+
+cpal(secuencia_cuiles_clasificados.seq)<-c("#7FC97F",'blue','orange','red','black',"white")
+seqIplot(secuencia_cuiles_clasificados.seq, sortv = "from.start", with.legend = "right", 
+             main = paste("Sec Nacional_clasificados"), cex.legend = 0.7)
+invisible()
+
+```
+##  Row
+
+```{r}
+
+clasificacion_total <-read_delim('clasificacion_total.csv', delim =",")
+
+primer_ultimo_valor_ant <- read_delim('valores(primer_ultimo)_antiguedad.csv',delim=",")
+
+primer_ultimo_valor_ant <- primer_ultimo_valor_ant[, 2:ncol(primer_ultimo_valor_ant)]
+
+primer_ultimo_valor_ant$primer_valor_antiguedad <- round(primer_ultimo_valor_ant$primer_valor_antiguedad,1)
+
+primer_ultimo_valor_ant$ultimo_valor_antiguedad <- round(primer_ultimo_valor_ant$ultimo_valor_antiguedad,1)
+
+
+clasificacion_total  <- left_join(clasificacion_total , primer_ultimo_valor_ant, by = "classification")
+
+
+knitr::kable(clasificacion_total, align = "c",caption = "Clasificacion - Nivel Nacional")
+
+```
+
+```{r}
+
+caso_gcaba <-read_delim('caso_gcaba.csv', delim =",")
+knitr::kable(caso_gcaba, align = "c",caption = "Clasificacion - GCABA - edad")
+
+```
 
 ```{r}
 #| context: server
@@ -718,7 +852,7 @@ output$antiguedad_provincia_0 <- renderText({
   data_indicadores_0 <- reactive_indicadores_0()
   ant_0 <- round(sum(data_indicadores_0$meses_trabajados_suma)/sum(data_indicadores_0$cantidad_docentes),2)
   dif <- ant_0 - antiguedad_0
-  paste ("En la provincia de ",input$provincia_0,". La continuidad promedio docente es de :", ant_0, '. En tanto la continuidad a nivel nacional es de: ', antiguedad_0, '. La diferencia es de ', dif , 'si ésta es positiva, denotaría un continuidad mayor de sus docentes con respecto al promedio nacional y si es negativa sería lo contrario.')  
+  paste ("En la provincia de ",input$provincia_0,". La continuidad promedio docente es de :", ant_0, '. En tanto la continuidad a nivel nacional es de: ', antiguedad_0, '. La diferencia es de ', dif , 'si C)sta es positiva, denotarC-a un continuidad mayor de sus docentes con respecto al promedio nacional y si es negativa serC-a lo contrario.')  
   })
 
 
@@ -737,7 +871,7 @@ if (input$sector_0 == "All") {
 
 reactive_seq_0 <- reactive({
   data_0 <- filtered_data_0()
-  secuencia_prov_0 <- seqdef(data_0,5:64,alphabet = c(1,0),states = c("SI","NO"),
+  secuencia_prov_0 <- seqdef(data_0,5:(64+12),alphabet = c(1,0),states = c("SI","NO"),
                                                 labels = c("mes_trabajado", "no_trabajado"), xtstep = 2)
   cpal(secuencia_prov_0)<-c("#C87850","white")
   return (secuencia_prov_0)
@@ -824,7 +958,7 @@ filtered_data <-reactive({
 
 reactive_seq <- reactive({
   data <- filtered_data()
-  secuencia_prov <- seqdef(data,6:65,alphabet = c(1,0),states = c("SI","NO"),
+  secuencia_prov <- seqdef(data,6:(65+12),alphabet = c(1,0),states = c("SI","NO"),
                                                    labels = c("mes_trabajado", "no_trabajado"), xtstep = 2)
   
   return (secuencia_prov)
@@ -851,7 +985,7 @@ if (input$sector_0 == "All") {
 
 reactive_seq_x <- reactive({
   data_x <- filtered_data_x()
-  secuencia_prov_x <- seqdef(data_x,4:63, alphabet = df_x.alphabet, states = df_x.scodes, 
+  secuencia_prov_x <- seqdef(data_x,4:(63+12), alphabet = df_x.alphabet, states = df_x.scodes, 
                    labels = df_x.labels, xtstep = 4)
   cpal(secuencia_prov_x)<-c("#7FC97F" ,"#FDC086","#FFFF99","white")
   return (secuencia_prov_x)
@@ -890,17 +1024,16 @@ reactive_barras <- reactive({
 output$grafico_barras_interactivo_provincia <- renderPlotly({reactive_barras()})
 
 
-
-output$Total_provincia <- renderValueBox({valueBox(value=round(sum(filtered_data_barras()$value)/60,0),
+output$Total_provincia <- renderValueBox({valueBox(value=round(sum(filtered_data_barras()$value)/(60+12),0),
                                                  subtitle = paste ("Total",input$provincia_barras))})
 
-output$interino_provincia <- renderValueBox({valueBox(value=round(sum(filtered_data_barras()%>% filter(Tipo == "Interino") %>% pull(value))/60,0), subtitle = paste ("Promedio - Interino",input$provincia_barras))})
+output$interino_provincia <- renderValueBox({valueBox(value=round(mean(filtered_data_barras()%>% filter(Tipo == "Interino") %>% pull(value), na.rm = TRUE),0), subtitle = paste ("Promedio - Interino",input$provincia_barras))})
 
 
-output$suplente_provincia <-  renderValueBox({valueBox(value=round(sum(filtered_data_barras()%>% filter(Tipo == "Suplente") %>% pull(value))/60,0), subtitle = paste ("Promedio - Suplente",input$provincia_barras))})
+output$suplente_provincia <-  renderValueBox({valueBox(value=round(mean(filtered_data_barras()%>% filter(Tipo == "Suplente") %>% pull(value),na.rm=TRUE),0), subtitle = paste ("Promedio - Suplente",input$provincia_barras))})
 
 
-output$titular_provincia <- renderValueBox({valueBox(value=round(sum(filtered_data_barras()%>% filter(Tipo == "Titular") %>% pull(value))/60,0), subtitle = paste ("Promedio - Titular",input$provincia_barras))})
+output$titular_provincia <- renderValueBox({valueBox(value=round(mean(filtered_data_barras()%>% filter(Tipo == "Titular") %>% pull(value),na.rm=TRUE),0), subtitle = paste ("Promedio - Titular",input$provincia_barras))})
 
 
 
@@ -959,15 +1092,33 @@ reactive_df_sankey_rotacion <- reactive({
 
   # Calculate total for percentages
   total_fil <- sum(links_fil$valores)
+  
+  
+  # calculamos las antiguedades
+  
+  antigueda_prom_estado_fil <- filtered_data_rotacion() %>%
+  group_by(estado_final12) %>%
+  summarize(avg_ant = mean(ANTIG))
+  
+  antigueda_prom_estado_fil$estado_final12 <- mappeado[antigueda_prom_estado_fil$estado_final12]
+  
+  links_fil <- links_fil %>%
+  left_join(antigueda_prom_estado_fil, by = c('objetivo' = 'estado_final12'))
+
+# Add tooltip with average age
+  links_fil$tooltip <- paste("Ant Promedio:", round(links_fil$avg_ant, 2))
+  
+  #
+  
 
   # Update node names with percentages
   nodos_fil$name <- c(
     "Maestro de Grado (Titular) en Escuela X",
-    paste("Cambia de Puesto en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "cambio_puesto") / total_fil, 1), "%)", sep = ""),
-    paste("Asciende a directivo en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "ascenso (dire_vice)") / total_fil, 1), "%)", sep = ""),
-    paste("Abandona Sist. Educativo (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "abandono sistema") / total_fil, 1), "%)", sep = ""),
-    paste("Deja la Escuela X por otra (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "otro (cambio o dejo la escuela)") / total_fil, 1), "%)", sep = ""),
-    paste("Mantiene su posicion en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "sin cambio") / total_fil, 1), "%)", sep = "")
+    paste("Cambia de Puesto en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "cambio_puesto") / total_fil, 1), "%) - ",links_fil[links_fil$objetivo == 1, "tooltip"], sep = ""),
+    paste("Asciende a directivo en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "ascenso (dire_vice)") / total_fil, 1), "%) - ",links_fil[links_fil$objetivo == 2, "tooltip"], sep = ""),
+    paste("Abandona Sist. Educativo (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "abandono sistema") / total_fil, 1), "%) - ",links_fil[links_fil$objetivo == 3, "tooltip"], sep = ""),
+    paste("Deja la Escuela X por otra (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "otro (cambio o dejo la escuela)") / total_fil, 1), "%) - ", links_fil[links_fil$objetivo == 4, "tooltip"],sep = ""),
+    paste("Mantiene su posicion en la Escuela X (", round(100 * sum(filtered_data_rotacion()$estado_final12 == "sin cambio") / total_fil, 1), "%) - ", links_fil[links_fil$objetivo == 5, "tooltip"],sep = "")
   )
 
   # Return the data frames as a list
@@ -998,6 +1149,8 @@ output$sankey_rotacion_provincia <- renderSankeyNetwork({
   )
 
 })
+
+
 
 
 ```
