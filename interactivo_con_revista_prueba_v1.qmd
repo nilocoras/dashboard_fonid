@@ -798,6 +798,74 @@ knitr::kable(caso_gcaba, align = "c",caption = "Clasificacion - GCABA - edad")
 
 ```
 
+
+# Rotacion CUILES entre escuelas
+
+
+```{r}
+setwd('C:/Users/Usuario/Desktop/Proyectos_Nilo/NACION/dashboard_fonid')
+
+cuiles_entre_cues <-read_delim('cuiles_historico_cues.csv', delim =";")
+
+cuiles_entre_cues <- sample_frac(
+cuiles_entre_cues, size = 0.1)
+
+cuiles_entre_cues <- cuiles_entre_cues %>%
+  mutate(across(where(is.numeric), ~ ifelse(. > 3, 4, .)))
+
+colnames(cuiles_entre_cues)[4: (3+72)] <- periodo_analisis
+
+#
+
+cuiles_entre_cues.alphabet <- c(1,0,-1,2,3,4)
+cuiles_entre_cues.scodes <- c("1era_escuela","sin_escuela", "dos_escuelas","2da_escuela","3era_escuela","4ta_escuela_a_mas")
+cuiles_entre_cues.labels <- c("1era_escuela","sin_escuela", "dos_escuelas","2da_escuela","3era_escuela","4ta_escuela_a_mas")
+
+cuiles_entre_cues.seq <- seqdef(cuiles_entre_cues, 4: (3+72), alphabet = cuiles_entre_cues.alphabet, states = cuiles_entre_cues.scodes, 
+                   labels = cuiles_entre_cues.labels, xtstep = 6)
+
+
+#cpal(cuiles_entre_cues.seq) <- c( "#8FD494" , "#e41a1c", "#377EB8", "#FFD92F", "#4B0082", "#D147A3")
+
+#cpal(cuiles_entre_cues.seq)<-c("white","lightblue","blue","red","green","black")
+
+seqIplot(cuiles_entre_cues.seq, sortv = "from.start", with.legend = "right", 
+             main = paste("Sec Nacional"), cex.legend = 0.7)
+
+invisible()
+
+```
+
+
+```{r}
+cuiles_entre_cues <-read_delim('cuiles_historico_cues.csv', delim =";")
+
+cuiles_entre_cues <- sample_frac(
+cuiles_entre_cues, size = 0.1)
+
+cuiles_entre_cues <- cuiles_entre_cues %>%
+  mutate(across(where(is.numeric), ~ ifelse(. > 3, 4, .)))
+
+colnames(cuiles_entre_cues)[4: (3+72)] <- periodo_analisis
+
+cuiles_entre_cues.alphabet <- c(1,0,-1,2,3,4)
+cuiles_entre_cues.scodes <- c("1era_escuela","sin_escuela", "dos_escuelas","2da_escuela","3era_escuela","4ta_escuela_a_mas")
+cuiles_entre_cues.labels <- c("1era_escuela","sin_escuela", "dos_escuelas","2da_escuela","3era_escuela","4ta_escuela_a_mas")
+
+cuiles_entre_cues.seq <- seqdef(cuiles_entre_cues, 4:(3+72), alphabet = cuiles_entre_cues.alphabet, states = cuiles_entre_cues.scodes, 
+                   labels = cuiles_entre_cues.labels, xtstep = 6)
+
+
+#cpal(cuiles_entre_cues.seq)<-c("lightblue","blue","red","green","black","white")
+
+seqIplot(cuiles_entre_cues.seq, group=cuiles_entre_cues$EDAD ,sortv = "from.start", with.legend = "right", 
+             main = paste("Sec Nacional"), cex.legend = 0.7)
+invisible()
+
+```
+
+
+
 ```{r}
 #| context: server
 
